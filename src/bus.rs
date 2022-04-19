@@ -573,7 +573,9 @@ impl<USB: UsbPeripheral> usb_device::bus::UsbBus for UsbBus<USB> {
     }
 
     fn poll(&self) -> PollResult {
-        interrupt::free(|cs| {
+        let fake_cs = unsafe { CriticalSection::new() };
+        let cs = &fake_cs;
+        {
             let regs = self.regs.borrow(cs);
 
             let core_id = read_reg!(otg_global, regs.global(), CID);
@@ -731,7 +733,7 @@ impl<USB: UsbPeripheral> usb_device::bus::UsbBus for UsbBus<USB> {
                     PollResult::None
                 }
             }
-        })
+        }
     }
 
     const QUIRK_SET_ADDRESS_BEFORE_STATUS: bool = true;
